@@ -10,7 +10,7 @@ DelaunatorKotlin is an incredibly fast Kotlin library for Delaunay triangulation
 
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
-[![Download](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/slaviboy/DelaunatorKotlin/releases/tag/v0.1.0)
+[![Download](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/slaviboy/DelaunatorKotlin/releases/tag/v.0.1.0)
 
 ## Add to your project
 Add the jitpack maven repository
@@ -51,5 +51,5 @@ val hull: IntArray = delaunator.hull
 var triangles: IntArray = delaunator.triangles
 ```
  
-If you want to visualise the delaunay triangulation in a View, you can check the available example on creating custom view that draws the **hull**, **halfEdges** and **point coordinates** for particular amount of points [HERE](https://github.com/slaviboy/DelaunatorKotlin/blob/master/app/src/main/java/com/slaviboy/delaunatorkotlinexamples/DelaunatorView.kt).
+If you want to visualise the delaunay triangulation in a View, you can check the available example on creating custom view that draws the **hull**, **halfEdges** and **point coordinates** for particular amount of points [HERE](https://github.com/slaviboy/DelaunatorKotlin/blob/master/app/src/main/java/com/slaviboy/delaunatorkotlinexample/DelaunatorView.kt).
  
