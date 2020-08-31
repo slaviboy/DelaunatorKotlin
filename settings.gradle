@@ -1,0 +1,3 @@
+include ':delaunator'
+include ':app'
+rootProject.name = "DelaunatorKotlin"
