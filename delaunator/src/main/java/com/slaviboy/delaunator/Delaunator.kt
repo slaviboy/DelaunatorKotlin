@@ -161,12 +161,11 @@ class Delaunator(vararg var coordinates: Double) {
             // order collinear points by dx (or dy if all x are identical)
             // and return the list as a hull
             for (i: Int in 0 until n) {
-                distanceTemp[i] =
-                    if (coordinates[2 * i] - coordinates[0] > 0) {
-                        (coordinates[2 * i] - coordinates[0])
-                    } else {
-                        (coordinates[2 * i + 1] - coordinates[1])
-                    }
+                distanceTemp[i] = if ((coordinates[2 * i] - coordinates[0]) != 0.0) {
+                    (coordinates[2 * i] - coordinates[0])
+                } else {
+                    (coordinates[2 * i + 1] - coordinates[1])
+                }
             }
 
             quicksort(idsTemp, distanceTemp, 0, n - 1)
