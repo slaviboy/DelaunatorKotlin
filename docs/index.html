@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Delaunator guide</title>
+  <meta name="viewport" content="width=640">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      --serif: Cambria, Georgia, serif;
+      --sans-serif: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      --monospace: "Roboto Mono", "Consolas", monospace, "Segoe UI Symbol", "Symbol";
+      --background-diagram: rgb(255, 255, 255);
+      --background-samples: rgb(255, 255, 255);
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.5em;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    header,
+    footer,
+    figcaption {
+      font-family: var(--sans-serif);
+    }
+
+    code,
+    tt,
+    kbd,
+    pre {
+      font-family: var(--monospace);
+      font-size: 15px;
+    }
+
+    main>* {
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 60rem;
+    }
+
+    pre {
+      line-height: 1.5;
+      display: block;
+      white-space: pre;
+      overflow-x: auto;
+      padding: 0 1em 0 1em;
+      background: var(--background-samples);
+    }
+
+    svg:not(.plain) {
+      background: var(--background-diagram);
+      max-width: 100%
+    }
+
+    pre,
+    svg:not(.plain) {
+      border: 1px solid hsl(60, 20%, 70%);
+      box-shadow: inset 0 1px 5px 0px rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+
+    figure {
+      font-size: small;
+      text-align: center;
+    }
+
+    .seed-points {
+      fill: hsl(0, 50%, 50%);
+      stroke: var(--background);
+      stroke-width: 1px;
+    }
+
+    .vertices {
+      fill: hsl(240, 50%, 50%);
+      stroke: white;
+      stroke-width: 1px;
+    }
+
+    .edges {
+      fill: none;
+      stroke: black;
+      stroke-width: 1.5px;
+    }
+
+    .arrowhead {
+      marker-end: url(#arrowhead-black);
+    }
+
+    figure#diagram-halfedges .edges {
+      stroke-width: 0.75px;
+    }
+
+    figure#diagram-voronoi .edges,
+    figure#diagram-triangles .edges {
+      stroke: white;
+      stroke-opacity: 0.1;
+    }
+
+    .highlight .edges {
+      stroke-width: 7.0;
+      stroke: hsl(0, 50%, 80%);
+      marker-end: unset;
+    }
+  </style>
+  <link rel="stylesheet" href="./default.min.css">
+</head>
+
+<body>
+
+  <script>
+    function nextHalfedge(e) { return (e % 3 === 2) ? e - 2 : e + 1; }
+    function prevHalfedge(e) { return (e % 3 === 0) ? e + 2 : e - 1; }
+    function forEachTriangleEdge(points, delaunay, callback) {
+      for (let e = 0; e < delaunay.triangles.length; e++) {
+        if (e > delaunay.halfedges[e]) {
+          const p = points[delaunay.triangles[e]];
+          const q = points[delaunay.triangles[nextHalfedge(e)]];
+          callback(e, p, q);
+        }
+      }
+    }
+
+    function edgesOfTriangle(t) { return [3 * t, 3 * t + 1, 3 * t + 2]; }
+
+    function pointsOfTriangle(delaunay, t) {
+      return edgesOfTriangle(t)
+        .map(e => delaunay.triangles[e]);
+    }
+
+    function forEachTriangle(points, delaunay, callback) {
+      for (let t = 0; t < delaunay.triangles.length / 3; t++) {
+        callback(t, pointsOfTriangle(delaunay, t).map(p => points[p]));
+      }
+    }
+
+    function triangleOfEdge(e) { return Math.floor(e / 3); }
+
+    function trianglesAdjacentToTriangle(delaunay, t) {
+      const adjacentTriangles = [];
+      for (const e of edgesOfTriangle(t)) {
+        const opposite = delaunay.halfedges[e];
+        if (opposite >= 0) {
+          adjacentTriangles.push(triangleOfEdge(opposite));
+        }
+      }
+      return adjacentTriangles;
+    }
+  </script>
+
+  <main>
+
+    <h1>DelaunatorKotlin</h1>
+
+    <p>
+      <a href="https://github.com/slaviboy/DelaunatorKotlin">DelaunatorKotlin</a> is a fast library for Delaunay
+      triangulation made for use in Android applications. It takes as input a set of point coordinates and produces as output a triangulation.
+      The triangulation is represented as compact arrays of integers. It’s less convenient than other representations
+      but is the reason the library is fast.
+    </p>
+
+    <figure id="diagram-points"></figure>
+
+    <p>
+    <figure id="diagram-delaunay"></figure>
+    </p>
+
+    <h2 id="delaunay-triangles">Delaunay triangles</h2>
+
+    <p>
+      After constructing a <b><code>val delaunator: Delaunator = Delaunator(coordinates)</code></b> object, it will have a
+      <code>triangles</code> array and a <code>halfEdges</code> array, both indexed by half-edge id. What’s a half-edge?
+    </p>
+
+    <figure id="diagram-halfedges"></figure>
+
+    <p>
+      A triangle edge may be shared with another triangle. Instead of thinking about each edge A↔︎B, we will use two
+      <em>half-edges</em> A→B and B→A. Having two half-edges is the key to everything this library provides.
+    </p>
+
+    <p>
+      Half-edges <em>e</em> are the indices into both of delaunator’s outputs:
+    </p>
+
+    <ul>
+      <li id="edge-to-points"><code>delaunator.triangles[e]</code> returns the point id where the half-edge starts</li>
+      <li id="edge-to-opposite"><code>delaunator.halfEdges[e]</code> returns the opposite half-edge in the adjacent
+        triangle, or -1 if there is no adjacent triangle</li>
+    </ul>
+
+    <p>
+      Triangle ids and half-edge ids are related.
+    </p>
+
+    <ul id="edge-and-triangle">
+      <li>The half-edges of triangle <em>t</em> are <code>3*t</code>, <code>3*t + 1</code>, and <code>3*t + 2</code>.
+      </li>
+      <li>The triangle of half-edge id <em>e</em> is <code>floor(e/3)</code>.</li>
+    </ul>
+
+    <p>
+      Let’s use some helper functions for these:
+    </p>
+
+    <pre><code class="language-kotlin" style="background-color: transparent;">
+  fun edgesOfTriangle(t: Int): IntArray {
+    return intArrayOf(3 * t, 3 * t + 1, 3 * t + 2)
+  }
+  fun triangleOfEdge(e: Int): Int {
+    return Math.floor(e / 3.0).toInt()
+  }
+</code></pre>
+
+    <p id="edge-to-edges">
+      It will also be useful to have some helper functions to go from one half-edge to the next and previous half-edges
+      in the same triangle:
+    </p>
+
+    <pre><code class="language-kotlin" style="background-color: transparent;">
+  fun nextHalfEdge(e: Int): Int {
+    return if (e % 3 == 2) e - 2 else e + 1
+  }
+  fun prevHalfEdge(e: Int): Int {
+    return if (e % 3 == 0) e + 2 else e - 1
+  }
+</code></pre>
+
+    <p>
+      Note: the sample code on this page is written for readability, not performance.
+    </p>
+
+    <h3>Delaunay edges</h3>
+
+    <p>
+      We can draw all the triangle edges without constructing the triangles themselves. Each edge is two half-edges. A
+      half-edge <em>e</em> starts at point with indices for the X and Y coordinates:
+      <b><code> [delaunator.triangles[e] * 2]</code></b> and <b><code> [delaunator.triangles[e] * 2 + 1]</code></b>. Its opposite
+     <b><code>delaunator.halfEdges[e]</code></b> starts at the other end, so that tells us the two endpoints of the edge.
+      However, the half-edges along the convex hull won’t have an opposite, so the two indices
+     <b><code> [delaunator.halfEdges[e] * 2] </code></b> and <b><code>[delaunator.halfEdges[e] * 2 + 1]</code></b> will be -1, and getting the coordinates will fail. To reliably
+      find the other end of the edge, we
+      need to instead use indices from <b><code>nextHalfEdge(e)</code></b>. We can loop through the half-edges and pick half of
+      them
+      to draw:
+    </p>
+
+    <pre><code class="language-kotlin" style="background-color: transparent;">
+  fun forEachTriangleEdge(delaunator: Delaunator) {
+    for (e in delaunator.triangles.indices) {
+      if (e > delaunator.halfEdges[e]) {
+
+        val i1 = delaunator.triangles[e] * 2
+        val x1 = delaunator.coordinates[i1]
+        val y1 = delaunator.coordinates[i1 + 1]
+
+        val i2 = delaunator.triangles[nextHalfEdge(e)] * 2
+        val x2 = delaunator.coordinates[i2]
+        val y2 = delaunator.coordinates[i2 + 1]
+
+        // coordinates of the edge points are: (x1,y1) and (x2,y2)
+      }
+    }
+  }
+    </code></pre>
+
+    <figure id="diagram-delaunay-edges"></figure>
+
+    <h3>Constructing triangles</h3>
+
+    <p>
+      A triangle is formed from three consecutive half-edges, <code>3*t</code>, <code>3*t + 1</code>,
+      <code>3*t + 2</code>. Each half-edge <em>e</em> starts at <code>points[e]</code>, so we can connect those three
+      points into a triangle.
+    </p>
+
+    <pre><code class="language-kotlin" style="background-color: transparent;">
+    fun edgesOfTriangle(t: Int): IntArray {
+        return intArrayOf(3 * t, 3 * t + 1, 3 * t + 2)
+    }
+
+    fun forEachTriangle(delaunator: Delaunator) {
+        for (t in 0 until delaunator.triangles.size / 3) {
+
+            val i1 = delaunator.triangles[t]
+            val x1 = delaunator.coordinates[i1 * 2]
+            val y1 = delaunator.coordinates[i1 * 2 + 1]
+
+            val i2 = delaunator.triangles[t + 1]
+            val x2 = delaunator.coordinates[i2 * 2]
+            val y2 = delaunator.coordinates[i2 * 2 + 1]
+
+            val i3 = delaunator.triangles[t + 2]
+            val x3 = delaunator.coordinates[i3 * 2]
+            val y3 = delaunator.coordinates[i3 * 2 + 1]
+
+            // coordinates of the triangle points are: (x1,y1), (x2,y2) and (x3,y3)
+        }
+    }
+        </code></pre>
+
+    <figure id="diagram-triangles"></figure>
+
+    <h3>Adjacent triangles</h3>
+
+    <p>
+      We can also use the half-edges of a triangle to find the adjacent triangles. Each half-edge's opposite will be in
+      an adjacent triangle, and the <code>edgeIdToTriangleId</code> helper function will tell us which triangle a
+      half-edge is in:
+    </p>
+
+    <pre><code class="language-kotlin" style="background-color: transparent;">
+  fun edgesOfTriangle(t: Int): IntArray {
+     return intArrayOf(3 * t, 3 * t + 1, 3 * t + 2)
+  }
+
+  fun triangleOfEdge(e: Int): Int {
+      return Math.floor(e / 3.0).toInt()
+  }
+
+  fun trianglesAdjacentToTriangle(delaunay: Delaunator, t: Int): ArrayList&lt;Int&gt; {
+     val adjacentTriangles = arrayListOf&lt;Int&gt;()
+     for (e in edgesOfTriangle(t)) {
+       val opposite = delaunay.halfEdges[e]
+       if (opposite >= 0) {
+         adjacentTriangles.add(triangleOfEdge(opposite))
+       }
+     }
+     return adjacentTriangles
+  }
+</code></pre>
+
+
+
+
+
+  </main>
+
+
+  <footer>
+    <svg class="plain" width="1" height="1">
+      <defs>
+        <marker id="arrowhead-black" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="8"
+          markerHeight="5" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="black" />
+        </marker>
+      </defs>
+    </svg>
+    <script src="./delaunator.min.js"></script>
+    <script src="diagrams.js"></script>
+    <script src="./highlight.min.js"></script>
+    <script>
+      document.querySelectorAll('main script:not([src])').forEach(element => {
+        let sibling = document.createElement('pre');
+        sibling.innerHTML = hljs.highlight('js', element.textContent, false, null).value;
+        element.parentNode.insertBefore(sibling, element);
+      });
+    </script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </footer>
+
+</body>
+
+</html>
