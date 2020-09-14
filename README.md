@@ -30,7 +30,7 @@ dependencies {
 ```
  
 ### How to use
-Create Delaunator object by passing your points coordinates in a form of FloatArray that holds the x,y coordinate pair for each point. After that you can get the half-edges indices using the **halfEdges** array, or get the hull indices using the **hull** array. Below is an example how to generate the delaunay triangulation:
+Create Delaunator object by passing your points coordinates in a form of DoubleArray that holds the x,y coordinate pair for each point. After that you can get the half-edges indices using the **halfEdges** array, or get the hull indices using the **hull** array. Below is an example how to generate the delaunay triangulation:
 ```kotlin
 
 // make sure you add at least 3 pairs of x,y coordinates
@@ -51,5 +51,5 @@ val hull: IntArray = delaunator.hull
 var triangles: IntArray = delaunator.triangles
 ```
  
-If you want to visualise the delaunay triangulation in a View, you can check the available example on creating custom view that draws the **hull**, **halfEdges** and **point coordinates** for particular amount of points [HERE](https://github.com/slaviboy/DelaunatorKotlin/blob/master/app/src/main/java/com/slaviboy/delaunatorkotlinexample/DelaunatorView.kt).
+If you want to draw the delaunay triangulation in a View, you can check the available example on creating custom view that draws the **hull**, **halfEdges** and **point coordinates** for particular amount of points [HERE](https://github.com/slaviboy/DelaunatorKotlin/blob/master/app/src/main/java/com/slaviboy/delaunatorkotlinexample/DelaunatorView.kt).
  
