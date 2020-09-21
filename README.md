@@ -10,7 +10,7 @@ DelaunatorKotlin is an incredibly fast Kotlin library for Delaunay triangulation
 
 [![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html)
 [![API](https://img.shields.io/badge/API-21%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=21)
-[![Download](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/slaviboy/DelaunatorKotlin/releases/tag/v.0.1.0)
+[![Download](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/slaviboy/DelaunatorKotlin/releases/tag/v0.2.0)
 
 ## Add to your project
 Add the jitpack maven repository
@@ -25,7 +25,7 @@ allprojects {
 Add the dependency
 ```
 dependencies {
-  implementation 'com.github.slaviboy:DelaunatorKotlin:v.0.1.0'
+  implementation 'com.github.slaviboy:DelaunatorKotlin:v0.2.0'
 }
 ```
  
