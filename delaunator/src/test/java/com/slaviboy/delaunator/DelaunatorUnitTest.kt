@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.Gson
+import com.slaviboy.graphics.PointD
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -172,9 +173,9 @@ class DelaunatorUnitTest {
         assertThat(circumradius).isEqualTo(45431.504410937196)
 
         // test circumcenter of a triangle
-        val circumcenter = Delaunator.PointD()
+        val circumcenter = PointD()
         Delaunator.circumcenter(0.0, 0.0, 132.0, 41.0, 53.0, 421.0, circumcenter)
-        assertThat(circumcenter).isEqualTo(Delaunator.PointD(6.19070581846102, 213.0567519991011))
+        assertThat(circumcenter).isEqualTo(PointD(6.19070581846102, 213.0567519991011))
 
         var isPointInCircumcircle = Delaunator.inCircle(0.0, 0.0, 100.0, 0.0, 50.0, 90.0, 150.0, 25.0)
         assertThat(isPointInCircumcircle).isEqualTo(true)
@@ -185,15 +186,15 @@ class DelaunatorUnitTest {
 
     fun validate(coordinates: DoubleArray, delaunator: Delaunator = Delaunator(*coordinates)) {
 
-        val points = ArrayList<Delaunator.PointD>()
+        val points = ArrayList<PointD>()
         for (i in 0 until coordinates.size / 2) {
-            points.add(Delaunator.PointD(coordinates[i * 2], coordinates[i * 2 + 1]))
+            points.add(PointD(coordinates[i * 2], coordinates[i * 2 + 1]))
         }
 
         validate(points, delaunator)
     }
 
-    fun validate(points: ArrayList<Delaunator.PointD>, d: Delaunator = Delaunator.from(points)) {
+    fun validate(points: ArrayList<PointD>, d: Delaunator = Delaunator.from(points)) {
 
         // check invalid halfedge connection
         for (i in d.halfEdges.indices) {
@@ -258,7 +259,7 @@ class DelaunatorUnitTest {
         return if (Math.abs(l - r) >= 3.3306690738754716e-16 * Math.abs(l + r)) l - r else 0.0
     }
 
-    fun isConvex(r: Delaunator.PointD, q: Delaunator.PointD, p: Delaunator.PointD): Boolean {
+    fun isConvex(r: PointD, q: PointD, p: PointD): Boolean {
         val orient1 = orient(p.x, p.y, r.x, r.y, q.x, q.y)
         val orient2 = orient(r.x, r.y, q.x, q.y, p.x, p.y)
         val orient3 = orient(q.x, q.y, p.x, p.y, r.x, r.y)

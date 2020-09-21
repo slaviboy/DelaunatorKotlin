@@ -16,6 +16,8 @@
 */
 package com.slaviboy.delaunator
 
+import com.slaviboy.graphics.PointD
+
 /**
  *  Class for generating Delaunay triangulation out of 2D points
  *  https://en.wikipedia.org/wiki/Delaunay_triangulation
@@ -455,12 +457,6 @@ class Delaunator(vararg var coordinates: Double) {
         }
 
         return ar
-    }
-
-    data class PointD(var x: Double = 0.0, var y: Double = 0.0) {
-        override fun toString(): String {
-            return "$x, $y"
-        }
     }
 
     // static methods and variable
